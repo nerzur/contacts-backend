@@ -104,4 +104,25 @@ public class BigContactServiceImpl implements BigContactService {
 
         return findContactById(contactDb.getId());
     }
+
+    @Override
+    public ContactRequest deleteFullContactData(ContactRequest contactRequest) {
+        Contact contactDb = contactRepository.findById(contactRequest.getContact().getId()).orElse(null);
+        if (null == contactDb) {
+            ExceptionsBuilder.launchException(result, this.getClass().getName(), "The indicated contact isn't exists.");
+            return null;
+        }
+        contactRequest.getAddresses().stream().map(address -> addressRepository.findAddressByAddress(address.getAddress())).map(addressDb -> contactAddressRepository.findContactAddressByContactAndAddress(contactDb, addressDb)).forEach(contactAddressRepository::deleteAll);
+        contactRequest.getPhoneNumbers().forEach(phoneNumber->{
+            PhoneNumber phoneNumberDb = phoneNumberRepository.findPhoneNumberByPhoneNumber(phoneNumber.getPhoneNumber());
+            phoneNumberRepository.delete(phoneNumber);
+        });
+        contactRepository.delete(contactDb);
+        return contactRequest;
+    }
+
+    @Override
+    public ContactRequest editFullContactData(ContactRequest contactRequest) {
+        return null;
+    }
 }

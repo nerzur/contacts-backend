@@ -152,4 +152,23 @@ public class ContactController {
         ContactRequest contactRequestDb = bigContactService.createFullContactData(contactRequest);
         return ResponseEntity.status(HttpStatus.OK).body(contactRequestDb);
     }
+
+    @Operation(summary = "Delete a Contact with All data")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "The Contact is created successfully",
+                    content = { @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = Contact.class)) }),
+            @ApiResponse(responseCode = "400", description = "An error is occurred (ie. This Contact isn't exists.)",
+                    content = { @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorMessage.class)) }),
+    })
+    @PostMapping(path = "/deleteFullContact")
+    public ResponseEntity<ContactRequest> deleteFullContact(@RequestBody ContactRequest contactRequest, BindingResult result) {
+        if (result.hasErrors()) {
+            log.error("One or more errors has been occurred");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ExceptionsBuilder.formatMessage(result));
+        }
+        ContactRequest contactRequestDb = bigContactService.deleteFullContactData(contactRequest);
+        return ResponseEntity.status(HttpStatus.OK).body(contactRequestDb);
+    }
 }
