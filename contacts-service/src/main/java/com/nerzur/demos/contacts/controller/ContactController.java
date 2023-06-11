@@ -78,7 +78,7 @@ public class ContactController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ExceptionsBuilder.formatMessage(result));
         }
         Contact contactDb = contactService.createContact(contact);
-        return ResponseEntity.status(HttpStatus.CREATED).body(contactDb);
+        return ResponseEntity.status(HttpStatus.OK).body(contactDb);
     }
 
     @Operation(summary = "Edit a Contact")
@@ -97,7 +97,7 @@ public class ContactController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ExceptionsBuilder.formatMessage(result));
         }
         Contact ContactDb = contactService.updateContact(Contact);
-        return ResponseEntity.status(HttpStatus.CREATED).body(ContactDb);
+        return ResponseEntity.status(HttpStatus.OK).body(ContactDb);
     }
 
     @Operation(summary = "Delete a Contact")
@@ -116,6 +116,40 @@ public class ContactController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ExceptionsBuilder.formatMessage(result));
         }
         Contact ContactDb = contactService.deleteContact(Contact.getId());
-        return ResponseEntity.status(HttpStatus.CREATED).body(ContactDb);
+        return ResponseEntity.status(HttpStatus.OK).body(ContactDb);
+    }
+
+    @Operation(summary = "Get all contact data by Contact")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "All data of Contact",
+                    content = { @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = Contact.class)) }),
+            @ApiResponse(responseCode = "400", description = "An error is occurred (ie. The indicated Contact isn´t exists)",
+                    content = { @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorMessage.class)) }),
+    })
+    @GetMapping(path = "/findAllDataByContact/{contactId}")
+    public ResponseEntity<ContactRequest> getAllContactData(@PathVariable Long contactId) {
+        ContactRequest contactRequestDb = bigContactService.findContactById(contactId);
+        return ResponseEntity.status(HttpStatus.OK).body(contactRequestDb);
+    }
+
+    @Operation(summary = "Create a Contact with All data")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "The Contact is created successfully",
+                    content = { @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = Contact.class)) }),
+            @ApiResponse(responseCode = "400", description = "An error is occurred (ie. This Contact is already exist.)",
+                    content = { @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorMessage.class)) }),
+    })
+    @PostMapping(path = "/createFullContact")
+    public ResponseEntity<ContactRequest> addContactWithAllData(@RequestBody ContactRequest contactRequest, BindingResult result) {
+        if (result.hasErrors()) {
+            log.error("One or more errors has been occurred");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ExceptionsBuilder.formatMessage(result));
+        }
+        ContactRequest contactRequestDb = bigContactService.createFullContactData(contactRequest);
+        return ResponseEntity.status(HttpStatus.OK).body(contactRequestDb);
     }
 }

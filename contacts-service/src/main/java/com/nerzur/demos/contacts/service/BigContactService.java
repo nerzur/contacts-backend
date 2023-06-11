@@ -7,6 +7,6 @@ import java.util.List;
 public interface BigContactService {
 
     public List<ContactRequest> listAllContacts();
-
     public ContactRequest findContactById(Long id);
+    public ContactRequest createFullContactData(ContactRequest contactRequest);
 }

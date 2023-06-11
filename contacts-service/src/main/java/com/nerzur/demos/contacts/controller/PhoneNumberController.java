@@ -73,6 +73,25 @@ public class PhoneNumberController {
         return ResponseEntity.status(HttpStatus.OK).body(phoneNumber);
     }
 
+    @Operation(summary = "Create a PhoneNumber")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "The PhoneNumber is created",
+                    content = { @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = PhoneNumber.class)) }),
+            @ApiResponse(responseCode = "400", description = "An error is occurred (ie. The indicated PhoneNumber is exists)",
+                    content = { @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorMessage.class)) }),
+    })
+    @PostMapping(path = "/create")
+    public ResponseEntity<PhoneNumber> createPhoneNumber(@RequestBody PhoneNumber PhoneNumber, BindingResult result) {
+        if (result.hasErrors()) {
+            log.error("One or more errors has been occurred");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ExceptionsBuilder.formatMessage(result));
+        }
+        PhoneNumber PhoneNumberDb = phoneNumberService.createPhoneNumber(PhoneNumber);
+        return ResponseEntity.status(HttpStatus.CREATED).body(PhoneNumberDb);
+    }
+
     @Operation(summary = "Edit a PhoneNumber")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "The PhoneNumber is edited successfully",

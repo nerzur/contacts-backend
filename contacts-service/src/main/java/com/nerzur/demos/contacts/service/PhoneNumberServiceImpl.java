@@ -53,6 +53,12 @@ public class PhoneNumberServiceImpl implements PhoneNumberService {
             ExceptionsBuilder.launchException(result, this.getClass().getName(), "The indicated phoneNumber is exists.");
             return null;
         }
+        Contact contactDb = contactRepository.findById(phoneNumber.getContact().getId()).orElse(null);
+        if(null == contactDb){
+            ExceptionsBuilder.launchException(result, this.getClass().getName(), "The indicated contact isn't exists.");
+            return null;
+        }
+        phoneNumber.setContact(contactDb);
         return phoneNumberRepository.save(phoneNumber);
     }
 

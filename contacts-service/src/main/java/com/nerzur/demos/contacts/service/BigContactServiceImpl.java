@@ -1,9 +1,7 @@
 package com.nerzur.demos.contacts.service;
 
-import com.nerzur.demos.contacts.entity.Address;
-import com.nerzur.demos.contacts.entity.Contact;
-import com.nerzur.demos.contacts.entity.ContactAddress;
-import com.nerzur.demos.contacts.entity.PhoneNumber;
+import com.nerzur.demos.contacts.entity.*;
+import com.nerzur.demos.contacts.repository.AddressRepository;
 import com.nerzur.demos.contacts.repository.ContactAddressRepository;
 import com.nerzur.demos.contacts.repository.ContactRepository;
 import com.nerzur.demos.contacts.repository.PhoneNumberRepository;
@@ -26,6 +24,8 @@ public class BigContactServiceImpl implements BigContactService {
     private final ContactRepository contactRepository;
     @Autowired
     private final ContactAddressRepository contactAddressRepository;
+    @Autowired
+    private final AddressRepository addressRepository;
     @Autowired
     private final PhoneNumberRepository phoneNumberRepository;
     private final BindingResult result = new BindException(new Exception(), "");
@@ -67,5 +67,41 @@ public class BigContactServiceImpl implements BigContactService {
                 .addresses(contactAddressesList)
                 .phoneNumbers(phoneNumberRepository.findPhoneNumberByContact(contact))
                 .build();
+    }
+
+    @Override
+    public ContactRequest createFullContactData(ContactRequest contactRequest) {
+        Contact contactDb = contactRepository.save(Contact.builder()
+                .firstName(contactRequest.getContact().getFirstName())
+                .secondName(contactRequest.getContact().getSecondName())
+                .birthDate(contactRequest.getContact().getBirthDate())
+                .personalPhoto(contactRequest.getContact().getPersonalPhoto())
+                .build());
+        List<Address> addressList = new ArrayList<>();
+        List<PhoneNumber> phoneNumberList = new ArrayList<>();
+        contactRequest.getAddresses().forEach(address -> {
+            Address addressDb = addressRepository.findAddressByAddress(address.getAddress());
+            if (null == addressDb)
+                addressDb = addressRepository.save(Address.builder().address(address.getAddress()).build());
+            addressList.add(addressDb);
+            contactAddressRepository.save(ContactAddress.builder()
+                    .contactAdrressesPk(ContactAdrressesPk.builder()
+                            .contactId(contactDb.getId())
+                            .addressId(addressDb.getId())
+                            .build())
+                    .contact(contactDb)
+                    .address(addressDb)
+                    .build());
+        });
+        contactRequest.getPhoneNumbers().forEach(phoneNumber -> {
+            PhoneNumber phoneNumberDb = new PhoneNumber();
+            phoneNumberDb.setContact(contactDb);
+            phoneNumberDb.setPhoneNumber(phoneNumber.getPhoneNumber());
+            System.out.println(phoneNumberDb.toString());
+            phoneNumberDb = phoneNumberRepository.save(phoneNumberDb);
+            phoneNumberList.add(phoneNumberDb);
+        });
+
+        return findContactById(contactDb.getId());
     }
 }

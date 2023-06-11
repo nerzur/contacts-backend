@@ -30,7 +30,7 @@ public class PhoneNumber implements Serializable {
     @NotNull
     private String phoneNumber;
 
-    @JoinColumn(name = "contactId", referencedColumnName = "id", insertable = false, updatable = false)
+    @JoinColumn(name = "contact_id", referencedColumnName = "id")
     @ManyToOne(optional = false)
     private Contact contact;
 }

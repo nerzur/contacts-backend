@@ -38,5 +38,6 @@ public class Contact implements Serializable {
     @Temporal(TemporalType.DATE)
     Date birthDate;
 
+    @Column(length = 4096)
     String personalPhoto;
 }
