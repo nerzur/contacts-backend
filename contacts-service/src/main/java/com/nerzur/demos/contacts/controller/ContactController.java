@@ -1,10 +1,11 @@
 package com.nerzur.demos.contacts.controller;
 
-import com.nerzur.demos.contacts.entity.Address;
 import com.nerzur.demos.contacts.entity.Contact;
 import com.nerzur.demos.contacts.service.BigContactService;
 import com.nerzur.demos.contacts.service.ContactService;
 import com.nerzur.demos.contacts.ui.ContactRequest;
+import com.nerzur.demos.contacts.ui.SearchContactsByDates;
+import com.nerzur.demos.contacts.ui.SearchContactsByFirstNameAndSecondName;
 import com.nerzur.demos.contacts.util.ErrorMessage;
 import com.nerzur.demos.contacts.util.ExceptionsBuilder;
 import io.swagger.v3.oas.annotations.Operation;
@@ -169,6 +170,63 @@ public class ContactController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ExceptionsBuilder.formatMessage(result));
         }
         ContactRequest contactRequestDb = bigContactService.deleteFullContactData(contactRequest);
+        return ResponseEntity.status(HttpStatus.OK).body(contactRequestDb);
+    }
+
+    @Operation(summary = "Search contacts by FirstName or SecondName data")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Operation Successfully",
+                    content = { @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = Contact.class)) }),
+            @ApiResponse(responseCode = "400", description = "An error is occurred (ie. This Contact isn't exists.)",
+                    content = { @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorMessage.class)) }),
+    })
+    @PostMapping(path = "/searchByFirstNameOrSecondName")
+    public ResponseEntity<List<Contact>> searchContact(@RequestBody SearchContactsByFirstNameAndSecondName searchContactsByFirstNameAndSecondName, BindingResult result) {
+        if (result.hasErrors()) {
+            log.error("One or more errors has been occurred");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ExceptionsBuilder.formatMessage(result));
+        }
+        List<Contact> contactList = contactService.findByFirstNameOrSecondName(searchContactsByFirstNameAndSecondName.getFirstName(), searchContactsByFirstNameAndSecondName.getSecondName());
+        return ResponseEntity.status(HttpStatus.OK).body(contactList);
+    }
+
+    @Operation(summary = "Search contacts by Dates (start and end)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Operation Successfully",
+                    content = { @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = Contact.class)) }),
+            @ApiResponse(responseCode = "400", description = "An error is occurred (ie. This Contact isn't exists.)",
+                    content = { @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorMessage.class)) }),
+    })
+    @PostMapping(path = "/searchContactsByDates")
+    public ResponseEntity<List<Contact>> searchContact(@RequestBody SearchContactsByDates searchContactsByDates, BindingResult result) {
+        if (result.hasErrors()) {
+            log.error("One or more errors has been occurred");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ExceptionsBuilder.formatMessage(result));
+        }
+        List<Contact> contactList = contactService.findAllByBirthDateBetween(searchContactsByDates.getStartDate(), searchContactsByDates.getEndDate());
+        return ResponseEntity.status(HttpStatus.OK).body(contactList);
+    }
+
+    @Operation(summary = "Edit a Full Contact")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "The Contact is edited successfully",
+                    content = { @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = Contact.class)) }),
+            @ApiResponse(responseCode = "400", description = "An error is occurred (ie. The indicated Contact isn´t exists)",
+                    content = { @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorMessage.class)) }),
+    })
+    @PostMapping(path = "/editFullContact")
+    public ResponseEntity<ContactRequest> editFullContact(@RequestBody ContactRequest contactRequest, BindingResult result) {
+        if (result.hasErrors()) {
+            log.error("One or more errors has been occurred");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ExceptionsBuilder.formatMessage(result));
+        }
+        ContactRequest contactRequestDb = bigContactService.editFullContactData(contactRequest);
         return ResponseEntity.status(HttpStatus.OK).body(contactRequestDb);
     }
 }

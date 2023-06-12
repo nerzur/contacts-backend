@@ -98,8 +98,10 @@ public class BigContactServiceImpl implements BigContactService {
             phoneNumberDb.setContact(contactDb);
             phoneNumberDb.setPhoneNumber(phoneNumber.getPhoneNumber());
             System.out.println(phoneNumberDb.toString());
-            phoneNumberDb = phoneNumberRepository.save(phoneNumberDb);
-            phoneNumberList.add(phoneNumberDb);
+            if (null == phoneNumberRepository.findPhoneNumberByPhoneNumber(phoneNumber.getPhoneNumber())) {
+                phoneNumberDb = phoneNumberRepository.save(phoneNumberDb);
+                phoneNumberList.add(phoneNumberDb);
+            }
         });
 
         return findContactById(contactDb.getId());
@@ -113,7 +115,7 @@ public class BigContactServiceImpl implements BigContactService {
             return null;
         }
         contactRequest.getAddresses().stream().map(address -> addressRepository.findAddressByAddress(address.getAddress())).map(addressDb -> contactAddressRepository.findContactAddressByContactAndAddress(contactDb, addressDb)).forEach(contactAddressRepository::deleteAll);
-        contactRequest.getPhoneNumbers().forEach(phoneNumber->{
+        contactRequest.getPhoneNumbers().forEach(phoneNumber -> {
             PhoneNumber phoneNumberDb = phoneNumberRepository.findPhoneNumberByPhoneNumber(phoneNumber.getPhoneNumber());
             phoneNumberRepository.delete(phoneNumber);
         });
@@ -123,6 +125,51 @@ public class BigContactServiceImpl implements BigContactService {
 
     @Override
     public ContactRequest editFullContactData(ContactRequest contactRequest) {
-        return null;
+        ContactRequest contactRequestDb = findContactById(contactRequest.getContact().getId());
+        if (null == contactRequestDb) {
+            ExceptionsBuilder.launchException(result, this.getClass().getName(), "The indicated contact isn't exists.");
+            return null;
+        }
+        contactRequestDb.getAddresses().stream().map(address -> addressRepository.findAddressByAddress(address.getAddress())).map(addressDb -> contactAddressRepository.findContactAddressByContactAndAddress(contactRequestDb.getContact(), addressDb)).forEach(contactAddressRepository::deleteAll);
+        contactRequestDb.getPhoneNumbers().forEach(phoneNumber -> {
+            PhoneNumber phoneNumberDb = phoneNumberRepository.findPhoneNumberByPhoneNumber(phoneNumber.getPhoneNumber());
+            phoneNumberRepository.delete(phoneNumber);
+        });
+
+        Contact contact = contactRequestDb.getContact();
+        contact.setFirstName(contactRequest.getContact().getFirstName());
+        contact.setSecondName(contactRequest.getContact().getSecondName());
+        contact.setBirthDate(contactRequest.getContact().getBirthDate());
+        contact.setPersonalPhoto(contactRequest.getContact().getPersonalPhoto());
+        Contact contactDb = contactRepository.save(contact);
+
+        List<Address> addressList = new ArrayList<>();
+        List<PhoneNumber> phoneNumberList = new ArrayList<>();
+        contactRequest.getAddresses().forEach(address -> {
+            Address addressDb = addressRepository.findAddressByAddress(address.getAddress());
+            if (null == addressDb)
+                addressDb = addressRepository.save(Address.builder().address(address.getAddress()).build());
+            addressList.add(addressDb);
+            contactAddressRepository.save(ContactAddress.builder()
+                    .contactAdrressesPk(ContactAdrressesPk.builder()
+                            .contactId(contactDb.getId())
+                            .addressId(addressDb.getId())
+                            .build())
+                    .contact(contactDb)
+                    .address(addressDb)
+                    .build());
+        });
+        contactRequest.getPhoneNumbers().forEach(phoneNumber -> {
+            PhoneNumber phoneNumberDb = new PhoneNumber();
+            phoneNumberDb.setContact(contactDb);
+            phoneNumberDb.setPhoneNumber(phoneNumber.getPhoneNumber());
+            System.out.println(phoneNumberDb.toString());
+            if (null == phoneNumberRepository.findPhoneNumberByPhoneNumber(phoneNumber.getPhoneNumber())) {
+                phoneNumberDb = phoneNumberRepository.save(phoneNumberDb);
+                phoneNumberList.add(phoneNumberDb);
+            }
+        });
+
+        return findContactById(contactDb.getId());
     }
 }

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.validation.BindException;
 import org.springframework.validation.BindingResult;
 
+import java.sql.Date;
 import java.util.List;
 
 @Service
@@ -56,5 +57,15 @@ public class ContactServiceImpl implements ContactService {
         contactDb.setBirthDate(contactDb.getBirthDate());
         contactDb.setPersonalPhoto(contactDb.getPersonalPhoto());
         return contactRepository.save(contactDb);
+    }
+
+    @Override
+    public List<Contact> findByFirstNameOrSecondName(String firstName, String secondName) {
+        return contactRepository.findByFirstNameIgnoreCaseOrSecondNameIgnoreCase(firstName, secondName);
+    }
+
+    @Override
+    public List<Contact> findAllByBirthDateBetween(Date startDate, Date endDate) {
+        return contactRepository.findAllByBirthDateBetween(startDate, endDate);
     }
 }
