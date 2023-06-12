@@ -1,0 +1,45 @@
+version: '3.8'
+services:
+  registry-service:
+    container_name: registry-service-v1.0
+    hostname: registry-service
+    build:
+      context: registry-service
+      dockerfile: Dockerfile
+    image: registry-service:latest
+    ports:
+      - "8761:8761"
+    networks:
+      - public-network
+
+  admin-service:
+    container_name: admin-service-v1.0
+    hostname: admin-service
+    build:
+      context: admin-service
+      dockerfile: Dockerfile
+    image: admin-service:latest
+    depends_on:
+      - registry-service
+    ports:
+      - "8086:8086"
+    networks:
+      - public-network
+
+  contacts-service:
+    container_name: contacts-service-v1.0
+    hostname: contacts-service
+    build:
+      context: contacts-service
+      dockerfile: Dockerfile
+    image: contacts-service:latest
+    depends_on:
+      - registry-service
+      - admin-service
+    ports:
+      - "8091:8091"
+    networks:
+      - public-network
+
+networks:
+  public-network:

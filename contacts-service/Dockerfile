@@ -15,6 +15,6 @@ MAINTAINER gabrielpga20@gmail.com
 
 EXPOSE 8091
 
-COPY --from=maven_build /tmp/target/drone-service.jar /drone-service/app.jar
+COPY --from=maven_build /tmp/target/contacts-service.jar /contacts-service/app.jar
 
-ENTRYPOINT ["java", "-jar", "/drone-service/app.jar"]
+ENTRYPOINT ["java", "-jar", "/contacts-service/app.jar"]
